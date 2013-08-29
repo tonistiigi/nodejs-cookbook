@@ -48,5 +48,8 @@ case node['platform_family']
 end
 
 packages.each do |node_pkg|
-  package node_pkg
+  package node_pkg do
+    version node['nodejs']['version'][1..-1] if node['nodejs']['version']
+    action :install
+  end
 end

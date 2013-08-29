@@ -27,17 +27,33 @@ case node['platform_family']
     package "libssl-dev"
 end
 
-nodejs_tar = "node-v#{node['nodejs']['version']}.tar.gz"
-nodejs_tar_path = nodejs_tar
-if node['nodejs']['version'].split('.')[1].to_i >= 5
-  nodejs_tar_path = "v#{node['nodejs']['version']}/#{nodejs_tar_path}"
+if node['platform_family'] == 'smartos'
+  src_dir = "/opt/local/src"
+else
+  src_dir = "/usr/local/src"
 end
-# Let the user override the source url in the attributes
-nodejs_src_url = "#{node['nodejs']['src_url']}/#{nodejs_tar_path}"
 
-remote_file "/usr/local/src/#{nodejs_tar}" do
+
+tar_root = "node-#{node['nodejs']['version']}"
+
+if node['nodejs']['version'].match('^v\d+\.\d+\.\d+$')
+  # Dist packages are smaller because they don't contain v8 tests.
+  nodejs_tar = "node-#{node['nodejs']['version']}.tar.gz"
+  base_url = "http://nodejs.org/dist/#{node['nodejs']['version']}"
+else
+  nodejs_tar = "#{node['nodejs']['version']}.tar.gz"
+  base_url = 'http://github.com/joyent/node/archive/'
+  if node['nodejs']['version'].match('^v\d+\.')
+    tar_root = "node-#{node['nodejs']['version'][1..-1]}"
+  end
+end
+
+nodejs_src_url = "#{base_url}/#{nodejs_tar}"
+
+directory src_dir
+
+remote_file "#{src_dir}/#{nodejs_tar}" do
   source nodejs_src_url
-  checksum node['nodejs']['checksum']
   mode 0644
   action :create_if_missing
 end
@@ -45,24 +61,24 @@ end
 # --no-same-owner required overcome "Cannot change ownership" bug
 # on NFS-mounted filesystem
 execute "tar --no-same-owner -zxf #{nodejs_tar}" do
-  cwd "/usr/local/src"
-  creates "/usr/local/src/node-v#{node['nodejs']['version']}"
+  cwd src_dir
+  creates "#{src_dir}/#{tar_root}"
 end
 
 bash "compile node.js (on #{node['nodejs']['make_threads']} cpu)" do
   # OSX doesn't have the attribute so arbitrarily default 2
-  cwd "/usr/local/src/node-v#{node['nodejs']['version']}"
+  cwd "#{src_dir}/#{tar_root}"
   code <<-EOH
     PATH="/usr/local/bin:$PATH"
     ./configure --prefix=#{node['nodejs']['dir']} && \
     make -j #{node['nodejs']['make_threads']}
   EOH
-  creates "/usr/local/src/node-v#{node['nodejs']['version']}/node"
+  creates "#{src_dir}/#{tar_root}/node"
 end
 
-execute "nodejs make install" do
-  environment({"PATH" => "/usr/local/bin:/usr/bin:/bin:$PATH"})
+execute "make install" do
+  #environment({"PATH" => "/usr/local/bin:/usr/bin:/bin:$PATH"})
   command "make install"
-  cwd "/usr/local/src/node-v#{node['nodejs']['version']}"
-  not_if {::File.exists?("#{node['nodejs']['dir']}/bin/node") && `#{node['nodejs']['dir']}/bin/node --version`.chomp == "v#{node['nodejs']['version']}" }
+  cwd "#{src_dir}/#{tar_root}"
+  not_if {::File.exists?("#{node['nodejs']['dir']}/bin/node") && `#{node['nodejs']['dir']}/bin/node --version`.chomp == "#{node['nodejs']['version']}" }
 end

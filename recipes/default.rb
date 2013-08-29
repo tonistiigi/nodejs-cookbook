@@ -22,4 +22,15 @@ case node['platform_family']
    include_recipe "apt"
 end
 
-include_recipe "nodejs::install_from_#{node['nodejs']['install_method']}"
+# Find the latest stable release
+if node['nodejs']['version'].nil?
+  require 'net/http'
+  node.set['nodejs']['version'] = Net::HTTP.get(URI('http://nodejs.org/dist/latest/')).match('node-([v\d\.]+)\.tar\.gz')[1]
+end
+
+if node['nodejs']['version'].match('^\d+\.\d+\.\d+$')
+  node.set['nodejs']['version'].prepend 'v'
+end
+
+
+include_recipe "nodejs::install_from_#{node['nodejs']['method']}"
