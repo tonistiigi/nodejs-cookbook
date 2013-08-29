@@ -1,4 +1,4 @@
-# <a name="title"></a> nodejs-cookbook [![Build Status](https://secure.travis-ci.org/mdxp/nodejs-cookbook.png)](http://travis-ci.org/mdxp/nodejs-cookbook)
+# nodejs-cookbook [![Build Status](https://secure.travis-ci.org/mdxp/nodejs-cookbook.png)](http://travis-ci.org/mdxp/nodejs-cookbook)
 
 DESCRIPTION
 ===========
@@ -11,26 +11,21 @@ REQUIREMENTS
 
 ## Platform
 
-* Tested on Debian 6 and Ubuntu 10.04
-* Should work fine on Centos, RHEL, etc.
+* Tested on SmartOS
+* Should work fine on Debian 6, Ubuntu 10.04, Centos, RHEL, etc.
 
 ## Cookbooks:
 
 * build-essential
-* apt
 
 Opscode cookbooks (http://github.com/opscode/cookbooks/tree/master)
 
 ATTRIBUTES
 ==========
 
-* nodejs['install_method'] = source or package
-* nodejs['version'] - release version of node to install
-* nodejs['src_url'] - download location for node source tarball
-* nodejs['dir'] - location where node will be installed, default /usr/local
-* nodejs['npm'] - version of npm to install
-* nodejs['npm_src_url'] - download location for npm source tarball
-* nodejs['check_sha'] - test for valid sha_sum, default: true
+* nodejs['method'] = source or binary
+* nodejs['version'] - release version of node to install, tag or commit
+* nodejs['dir'] - location where node will be installed, default /opt/local
 
 USAGE
 =====
@@ -38,25 +33,6 @@ USAGE
 Include the nodejs recipe to install node on your system based on the default installation method:
 
 *  include_recipe "nodejs"
-
-Include the install_from_source recipe to install node from sources:
-
-*  include_recipe "nodejs::install_from_source"
-
-Include the install_from_package recipe to install node from packages:
-Note that only apt (Ubuntu, Debian) appears to have up to date packages available.
-Centos, RHEL, etc are non-functional. (Try install_from_binary for those)
-
-*  include_recipe "nodejs::install_from_package"
-
-Include the install_from_binary recipe to install node from official prebuilt binaries:
-(Currently Linux x86, x86_64, armv6l only)
-
-*  include_recipe "nodejs::install_from_binary"
-
-Include the npm recipe to install npm:
-
-*  include_recipe "nodejs::npm"
 
 LICENSE and AUTHOR
 ==================
